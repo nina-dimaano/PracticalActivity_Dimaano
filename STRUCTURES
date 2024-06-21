@@ -1,0 +1,22 @@
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+struct Circle {
+    float radius;
+};
+
+int main() {
+    Circle circle1;
+    cout << "Enter radius: ";
+    cin >> circle1.radius;
+
+    float circumference = 2 * 3.14159 * circle1.radius;
+    float area = 3.14159 * circle1.radius * circle1.radius;
+
+    cout << fixed << setprecision(2);
+    cout << "Circumference: " << circumference << endl;
+    cout << "Area: " << area << endl;
+
+  return 0;
+}
