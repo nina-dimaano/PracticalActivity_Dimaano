@@ -1,0 +1,550 @@
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
+#include <ctime>
+
+using namespace std;
+
+struct RoomBooking // For Booking
+{
+    string categoryRoom;
+    string room[4];
+    float RoomPrice[4];
+};
+
+struct BookingNode {
+    string roomName;
+    string categoryName;
+    float roomPrice;
+    int quantity;
+    int checkInDate;
+    int checkOutDate;
+    int numberOfNights;
+    BookingNode* next;
+
+    BookingNode(string rn, string cn, float rp, int qty, int cin, int cout, int nights)
+        : roomName(rn), categoryName(cn), roomPrice(rp), quantity(qty), checkInDate(cin), checkOutDate(cout), numberOfNights(nights), next(nullptr) {}
+};
+
+class BookingList {
+private:
+    BookingNode* head;
+
+public:
+    BookingList() : head(nullptr) {}
+
+    void addBooking(string roomName, string categoryName, float roomPrice, int quantity, int checkInDate, int checkOutDate, int numberOfNights) {
+        BookingNode* newNode = new BookingNode(roomName, categoryName, roomPrice, quantity, checkInDate, checkOutDate, numberOfNights);
+        if (!head) {
+            head = newNode;
+        } else {
+            BookingNode* temp = head;
+            while (temp->next) {
+                temp = temp->next;
+            }
+            temp->next = newNode;
+        }
+    }
+
+    void displayBookings() {
+        BookingNode* temp = head;
+        while (temp) {
+            cout << "Room: " << temp->roomName << "\nCategory: " << temp->categoryName << "\nRoom Price: " << temp->roomPrice
+                 << "\nQuantity: " << temp->quantity << "\nCheck-in Date: " << temp->checkInDate << "\nCheck-out Date: " << temp->checkOutDate
+                 << "\nNumber of Nights: " << temp->numberOfNights << "\n\n";
+            temp = temp->next;
+        }
+    }
+
+    bool isDateBooked(int day) {
+        BookingNode* temp = head;
+        while (temp) {
+            if (temp->checkInDate <= day && day < temp->checkOutDate) {
+                return true;
+            }
+            temp = temp->next;
+        }
+        return false;
+    }
+
+    BookingNode* getHead() {
+        return head;
+    }
+};
+
+string singleLong = "--------------------------------------------------------------------------------------\n";
+string singleLine = "---------------------------------------------------------------------------\n";
+string singleShort = "--------------------------------------------------------------\n";
+string singleMedium = "---------------------------------------------------------------------------\n";
+
+BookingList bookingList;
+
+int addMore, categoryRoom, roomChoice;
+float totalPrice = 0;
+float bookingAmount = 0;
+
+RoomBooking roomBooking[3] = {
+    {"Rooms with Breakfast", {"Standard Room", "Loft Suite", "Deluxe Room", "Family Room"}, {2750.00, 6650.00, 4850.00, 7750.00}},
+    {"Rooms without Breakfast", {"Standard Room", "Loft Suite", "Deluxe Room", "Family Room"}, {2500.00, 6400.00, 4600.00, 7500.00}},
+    {"Services and Facilities", {"Pool Access Pass", "Spa and Wellness Package", "Guided Tour Package", "Romantic Dinner Setup"}, {350.00, 1000.00, 1300.00, 1200.00}},
+};
+
+// Function prototypes
+void displayCalendar(int month, int year);
+void checkAvailability(int day);
+void askToBook();
+void showBooking();
+void paymentMethod();
+void bookingProcessing();
+void mainBooking();
+void mainHome();
+void home();
+void mainContact();
+void mainAbout();
+void mainRooms();
+void mainLogIn();
+void registration();
+
+// Calendar display function
+void displayCalendar(int month, int year)
+{
+    const string months[] = { "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+    const int daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+    // Leap year check
+    bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    int days = daysInMonth[month - 1];
+    if (month == 2 && isLeapYear) days = 29;
+
+    // Determine the day of the week for the first day of the month
+    tm time_in = { 0, 0, 0, 1, month - 1, year - 1900 };
+    time_t firstDay = mktime(&time_in);
+    tm* time_out = localtime(&firstDay);
+    int startDay = time_out->tm_wday; // Sunday = 0, Monday = 1, ..., Saturday = 6
+
+    cout << months[month - 1] << " " << year << "\n";
+    cout << "Su Mo Tu We Th Fr Sa\n";
+
+    for (int i = 0; i < startDay; ++i)
+        cout << "   ";
+
+    for (int day = 1; day <= days; ++day)
+    {
+        cout << setw(2) << day << " ";
+        if ((day + startDay) % 7 == 0)
+            cout << endl;
+    }
+    cout << endl;
+}
+
+// Check if the selected day is available
+void checkAvailability(int day)
+{
+    if (bookingList.isDateBooked(day))
+        cout << "The selected date is already booked.\n";
+    else
+        cout << "The selected date is available.\n";
+}
+
+void askToBook()
+{
+    while (1)
+    {
+        cout << "Available Categories\n";
+        cout << singleLine;
+        for (int i = 0; i < 3; i++)
+        {
+            cout << "[" << i + 1 << "] " << roomBooking[i].categoryRoom << endl;
+        }
+        cout << "[4] Exit\n";
+        cout << singleLine;
+        cout << "Choose a category: ";
+        cin >> categoryRoom;
+        if (categoryRoom == 4)
+        {
+            system("cls");
+            mainBooking();
+        }
+
+        system("cls");
+        cout << roomBooking[categoryRoom - 1].categoryRoom << " Options" << "\t\t\t   RoomPrice \n";
+        cout << singleLine;
+        for (int i = 0; i < 4; i++)
+        {
+            cout << i + 1 << ". " << setw(30) << left << roomBooking[categoryRoom - 1].room[i] << "\t\t  P" << fixed << setprecision(2) << roomBooking[categoryRoom - 1].RoomPrice[i] << endl;
+        }
+        cout << singleLine;
+        cout << "Choose a room: ";
+        cin >> roomChoice;
+        cout << singleLine;
+        cout << "Quantity: ";
+        cin >> addMore;
+
+        system("cls");
+        cout << "\nYOUR RESERVATION HAS BEEN ADDED!\n\n";
+        cout << "Do you want to add another reservation?\n";
+        cout << singleLine;
+        cout << "[1] Yes\n";
+        cout << "[2] No\n";
+        cout << singleLine;
+        cout << "Input: ";
+        int add;
+        cin >> add;
+        if (add == 1)
+        {
+            system("cls");
+            continue;
+        }
+        else
+        {
+            system("cls");
+
+            // Display calendar and select date
+            int month, year;
+            cout << "Enter the year (e.g., 2024): ";
+            cin >> year;
+            cout << "Enter the month (1-12): ";
+            cin >> month;
+            displayCalendar(month, year);
+
+            int chosenDay;
+            cout << "Select a day to book (1-31): ";
+            cin >> chosenDay;
+            checkAvailability(chosenDay);
+
+            bookingList.addBooking(roomBooking[categoryRoom - 1].room[roomChoice - 1], roomBooking[categoryRoom - 1].categoryRoom, roomBooking[categoryRoom - 1].RoomPrice[roomChoice - 1], addMore, chosenDay, chosenDay + 1, 1);
+
+            showBooking();
+            break;
+        }
+    }
+}
+
+void showBooking() 
+{
+    string proceed;
+    system("cls");
+
+    cout << singleLine;
+    cout << "BOOKING SUMMARY\n";
+    cout << singleLine;
+
+    bookingList.displayBookings();
+
+    // Calculate total price
+    totalPrice = 0;
+    BookingNode* temp = bookingList.getHead();
+    while (temp) {
+        totalPrice += temp->roomPrice * temp->quantity;
+        temp = temp->next;
+    }
+
+    cout << fixed << setprecision(2) << "\nBooking Total Amount: P" << totalPrice << endl;
+
+    int monthIn, checkIn, checkOut;
+    cout << "Enter check-in date (day only): ";
+    cin >> checkIn;
+    cout << "Enter check-out date (day only): ";
+    cin >> checkOut;
+    
+    int numberOfNights = checkOut - checkIn;
+    cout << "\nNumber of Nights: " << numberOfNights;
+
+    bookingAmount = totalPrice * numberOfNights;
+    cout << fixed << setprecision(2) << "\nBooking Total Amount: P" << bookingAmount << endl;
+    cout << singleLine;
+    cout << "Proceed to Payment [y/n]: ";
+    cin >> proceed;
+    if (proceed == "y" || proceed == "Y")
+    {
+        paymentMethod();
+    }
+    else
+    {
+        mainBooking();
+    }
+}
+
+void paymentMethod()
+{
+    system("cls");
+    int payment;
+    cout << "\nHow would you like to pay?\n";
+    cout << singleLine;
+    cout << "[1] Bank Transfer\n";
+    cout << "[2] Cash Payment\n";
+    cout << "[3] GCash\n";
+    cout << "[4] Credit Card\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> payment;
+
+    system("cls");
+    cout << "\nBooking is being processed...\n\n";
+    cout << "Thank you for choosing our resort!\n";
+    cout << "For any concerns, please contact us at 0926-4311-755.\n\n";
+    cout << "Press any key to continue...";
+    cin.ignore();
+    cin.get();
+    mainHome();
+}
+
+void bookingProcessing()
+{
+    cout << "\n\nYour reservation is being processed...\n";
+    cout << "You will be redirected to the payment page shortly...\n\n";
+}
+
+void mainBooking()
+{
+    int bookingChoice;
+    system("cls");
+    cout << singleLine;
+    cout << "BOOK NOW!\n";
+    cout << singleLine;
+    cout << "[1] Reserve a Room\n";
+    cout << "[2] View Reservation\n";
+    cout << "[3] Exit\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> bookingChoice;
+
+    switch (bookingChoice)
+    {
+    case 1:
+        askToBook();
+        break;
+    case 2:
+        showBooking();
+        break;
+    case 3:
+        mainHome();
+        break;
+    default:
+        cout << "Invalid choice! Please try again.\n";
+        mainBooking();
+        break;
+    }
+}
+
+void mainHome()
+{
+    int mainChoice;
+    system("cls");
+    cout << singleLine;
+    cout << "WELCOME TO OUR RESORT!\n";
+    cout << singleLine;
+    cout << "[1] Book Now\n";
+    cout << "[2] Rooms and Rates\n";
+    cout << "[3] About Us\n";
+    cout << "[4] Contact Us\n";
+    cout << "[5] Log In\n";
+    cout << "[6] Register\n";
+    cout << "[7] Exit\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> mainChoice;
+
+    switch (mainChoice)
+    {
+    case 1:
+        mainBooking();
+        break;
+    case 2:
+        mainRooms();
+        break;
+    case 3:
+        mainAbout();
+        break;
+    case 4:
+        mainContact();
+        break;
+    case 5:
+        mainLogIn();
+        break;
+    case 6:
+        registration();
+        break;
+    case 7:
+        exit(0);
+        break;
+    default:
+        cout << "Invalid choice! Please try again.\n";
+        mainHome();
+        break;
+    }
+}
+
+void mainContact()
+{
+    int contactChoice;
+    system("cls");
+    cout << singleLine;
+    cout << "CONTACT US\n";
+    cout << singleLine;
+    cout << "For reservations and inquiries, please contact us at:\n";
+    cout << "Phone: 0926-4311-755\n";
+    cout << "Email: info@resort.com\n";
+    cout << singleLine;
+    cout << "[1] Main Menu\n";
+    cout << "[2] Exit\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> contactChoice;
+
+    switch (contactChoice)
+    {
+    case 1:
+        mainHome();
+        break;
+    case 2:
+        exit(0);
+        break;
+    default:
+        cout << "Invalid choice! Please try again.\n";
+        mainContact();
+        break;
+    }
+}
+
+void mainAbout()
+{
+    int aboutChoice;
+    system("cls");
+    cout << singleLine;
+    cout << "ABOUT US\n";
+    cout << singleLine;
+    cout << "Welcome to our resort! We are committed to providing the best\n";
+    cout << "experience for our guests with top-notch facilities and services.\n";
+    cout << "Thank you for choosing us!\n";
+    cout << singleLine;
+    cout << "[1] Main Menu\n";
+    cout << "[2] Exit\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> aboutChoice;
+
+    switch (aboutChoice)
+    {
+    case 1:
+        mainHome();
+        break;
+    case 2:
+        exit(0);
+        break;
+    default:
+        cout << "Invalid choice! Please try again.\n";
+        mainAbout();
+        break;
+    }
+}
+
+void mainRooms()
+{
+    int roomChoice;
+    system("cls");
+    cout << singleLine;
+    cout << "ROOMS AND RATES\n";
+    cout << singleLine;
+    cout << "1. Standard Room\n";
+    cout << "2. Loft Suite\n";
+    cout << "3. Deluxe Room\n";
+    cout << "4. Family Room\n";
+    cout << "5. Pool Access Pass\n";
+    cout << "6. Spa and Wellness Package\n";
+    cout << "7. Guided Tour Package\n";
+    cout << "8. Romantic Dinner Setup\n";
+    cout << singleLine;
+    cout << "[1] Main Menu\n";
+    cout << "[2] Exit\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> roomChoice;
+
+    switch (roomChoice)
+    {
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8:
+        mainHome();
+        break;
+    default:
+        cout << "Invalid choice! Please try again.\n";
+        mainRooms();
+        break;
+    }
+}
+
+void mainLogIn()
+{
+    int logInChoice;
+    system("cls");
+    cout << singleLine;
+    cout << "LOG IN\n";
+    cout << singleLine;
+    cout << "Enter your credentials to log in.\n";
+    cout << singleLine;
+    cout << "[1] Main Menu\n";
+    cout << "[2] Exit\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> logInChoice;
+
+    switch (logInChoice)
+    {
+    case 1:
+        mainHome();
+        break;
+    case 2:
+        exit(0);
+        break;
+    default:
+        cout << "Invalid choice! Please try again.\n";
+        mainLogIn();
+        break;
+    }
+}
+
+void registration()
+{
+    int registrationChoice;
+    system("cls");
+    cout << singleLine;
+    cout << "REGISTER\n";
+    cout << singleLine;
+    cout << "Enter your details to register.\n";
+    cout << singleLine;
+    cout << "[1] Main Menu\n";
+    cout << "[2] Exit\n";
+    cout << singleLine;
+    cout << "Input: ";
+    cin >> registrationChoice;
+
+    switch (registrationChoice)
+    {
+    case 1:
+        mainHome();
+        break;
+    case 2:
+        exit(0);
+        break;
+    default:
+        cout << "Invalid choice! Please try again.\n";
+        registration();
+        break;
+    }
+}
+
+int main()
+{
+    mainHome();
+    return 0;
+}
